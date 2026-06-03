@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Election Results · OmniVote</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    :root {
+      --primary:  #6C63FF;
+      --success:  #00D4AA;
+      --error:    #FF6B6B;
+      --warning:  #FFA502;
+      --bg:       #0f0f1a;
+      --bg2:      #1a1a2e;
+      --bg3:      #1e1e32;
+      --border:   #2a2a45;
+      --text:     #e8e8f0;
+      --text2:    #9090b0;
+      --text3:    #555570;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #3f3bc2 0%, #6c63ff 60%, #9188ff 100%);
+      padding: 20px 24px 28px;
+    }
+    .header-inner { max-width: 720px; margin: 0 auto; }
+    .brand { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .brand-icon {
+      width: 36px; height: 36px; background: rgba(255,255,255,.2);
+      border-radius: 9px; display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+    }
+    .brand-name { font-size: 14px; font-weight: 700; color: #fff; letter-spacing: .3px; }
+    .election-title { font-size: 24px; font-weight: 900; color: #fff; line-height: 1.2; margin-bottom: 6px; }
+    .election-org { font-size: 13px; color: rgba(255,255,255,.7); margin-bottom: 14px; }
+    .header-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+    .meta-pill {
+      background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.2);
+      border-radius: 99px; padding: 4px 12px; font-size: 12px; font-weight: 600; color: #fff;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+    /* ── Main ── */
+    .main { max-width: 720px; margin: 0 auto; padding: 24px 16px 60px; }
+
+    /* ── Stats ── */
+    .stats { display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap; }
+    .stat-card {
+      flex: 1; min-width: 120px;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 16px; text-align: center;
+    }
+    .stat-val { font-size: 28px; font-weight: 900; color: var(--primary); }
+    .stat-lbl { font-size: 11px; color: var(--text2); margin-top: 2px; }
+
+    /* ── Section ── */
+    .section-title {
+      font-size: 16px; font-weight: 800; color: var(--text);
+      display: flex; align-items: center; gap: 8px; margin-bottom: 14px;
+    }
+    .section-title i { color: var(--primary); }
+
+    /* ── Candidate bars ── */
+    .candidate { margin-bottom: 14px; }
+    .cand-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 6px;
+    }
+    .cand-left { display: flex; align-items: center; gap: 8px; }
+    .cand-rank {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800; flex-shrink: 0;
+    }
+    .cand-name { font-size: 14px; font-weight: 700; color: var(--text); }
+    .cand-party { font-size: 11px; color: var(--text2); margin-left: 4px; }
+    .cand-pct { font-size: 13px; font-weight: 700; }
+    .cand-votes { font-size: 11px; color: var(--text2); margin-left: 6px; }
+    .bar-bg { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 5px; transition: width 1s cubic-bezier(.4,0,.2,1); }
+    .winner-badge {
+      background: rgba(255,215,0,.15); border: 1px solid rgba(255,215,0,.4);
+      color: #b8860b; font-size: 10px; font-weight: 800; letter-spacing: .5px;
+      padding: 2px 8px; border-radius: 99px; margin-left: 8px;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 20px; margin-bottom: 20px;
+    }
+
+    /* ── Actions bar ── */
+    .actions-bar {
+      display: flex; gap: 10px; flex-wrap: wrap;
+      background: var(--bg2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 14px 16px; margin-bottom: 20px;
+      align-items: center;
+    }
+    .actions-label { font-size: 12px; color: var(--text2); flex: 1; min-width: 140px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      border: 1px solid var(--border); background: var(--bg3);
+      color: var(--text); border-radius: 9px; padding: 7px 14px;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      text-decoration: none; transition: border-color .15s, background .15s;
+    }
+    .btn:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .btn-primary:hover { background: #5548e8; }
+
+    /* ── Share URL ── */
+    .share-row {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 9px; padding: 8px 12px;
+    }
+    .share-url {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--text2); font-size: 12px; font-family: monospace;
+    }
+    .copy-btn {
+      background: none; border: none; cursor: pointer;
+      color: var(--primary); font-size: 13px; padding: 2px 6px;
+    }
+
+    /* ── Blockchain note ── */
+    .blockchain-note {
+      background: var(--bg3); border: 1px solid var(--border);
+      border-radius: 12px; padding: 14px 16px;
+      display: flex; align-items: center; gap: 12px;
+      font-size: 12px; color: var(--text2); line-height: 1.5;
+    }
+    .blockchain-note i { color: var(--primary); font-size: 18px; flex-shrink: 0; }
+
+    /* ── Loading / Error ── */
+    .center-state {
+      text-align: center; padding: 80px 20px; color: var(--text2);
+    }
+    .center-state i { font-size: 48px; margin-bottom: 16px; opacity: .5; }
+    .center-state h2 { font-size: 20px; color: var(--text); margin-bottom: 8px; }
+
+    /* ── Refresh indicator ── */
+    .live-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; color: var(--success); font-weight: 700;
+    }
+    .live-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--success); animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    /* ── Footer ── */
+    footer {
+      text-align: center; padding: 32px 16px;
+      font-size: 12px; color: var(--text3);
+      border-top: 1px solid var(--border);
+      max-width: 720px; margin: 0 auto;
+    }
+    footer a { color: var(--primary); text-decoration: none; }
+
+    @media(max-width:480px) {
+      .election-title { font-size: 20px; }
+      .stats { flex-direction: column; }
+      .stat-card { min-width: unset; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-inner">
+    <div class="brand">
+      <div class="brand-icon">🗳️</div>
+      <span class="brand-name">OmniVote</span>
+    </div>
+    <div id="election-title" class="election-title">Loading…</div>
+    <div id="election-org" class="election-org"></div>
+    <div id="header-meta" class="header-meta"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="content">
+    <div class="center-state">
+      <i class="fas fa-circle-notch fa-spin"></i>
+      <h2>Loading results…</h2>
+    </div>
+  </div>
+  <footer>
+    <p>Results are <strong>blockchain-verified</strong> and publicly auditable.</p>
+    <p style="margin-top:6px">Powered by <a href="/">OmniVote</a> · Secure, Transparent Democracy</p>
+  </footer>
+</div>
+
+<script>
+'use strict';
+
+var PALETTE = ['#6C63FF','#E74C3C','#2ECC71','#3498DB','#E67E22','#9B59B6','#1ABC9C','#F39C12'];
+var electionId = null;
+var resultsData = null;
+var refreshTimer = null;
+
+// Extract election ID from URL: /results/ELECTION_ID
+function getElectionId() {
+  var path = window.location.pathname;
+  var match = path.match(/\/results\/([^/?#]+)/);
+  return match ? match[1] : null;
+}
+
+async function loadResults() {
+  electionId = getElectionId();
+  if (!electionId) {
+    showError('Invalid URL', 'No election ID found in the URL.');
+    return;
+  }
+
+  try {
+    var res  = await fetch('/api/elections/' + electionId + '/results');
+    var data = res.ok ? await res.json().catch(function(){ return null; }) : null;
+
+    if (!data || !data.success) {
+      showError('Results Unavailable',
+        data && data.message ? data.message : 'This election may not have started yet.');
+      return;
+    }
+
+    resultsData = data.data;
+    render(resultsData);
+
+    // Auto-refresh every 30s if active
+    if (resultsData.status === 'active') {
+      clearTimeout(refreshTimer);
+      refreshTimer = setTimeout(loadResults, 30000);
+    }
+  } catch (e) {
+    showError('Connection Error', 'Could not reach the OmniVote server. Please try again.');
+  }
+}
+
+function render(d) {
+  var total = d.totalVotes || 0;
+
+  // Header
+  document.title = (d.title || 'Election Results') + ' · OmniVote';
+  document.getElementById('election-title').textContent = d.title || 'Election Results';
+  document.getElementById('election-org').textContent = '';
+
+  var statusColor = { active: '#00D4AA', closed: '#6C63FF', pending: '#FFA502', cancelled: '#FF6B6B' };
+  var dotColor = statusColor[d.status] || '#9090b0';
+  var metaHtml =
+    '<div class="meta-pill"><span class="status-dot" style="background:' + dotColor + '"></span>' + (d.status||'').toUpperCase() + '</div>' +
+    '<div class="meta-pill"><i class="fas fa-users"></i>' + numFmt(total) + ' votes</div>';
+  if (d.status === 'active') {
+    metaHtml += '<div class="meta-pill live-badge"><span class="live-dot"></span>LIVE · refreshes every 30s</div>';
+  }
+  document.getElementById('header-meta').innerHTML = metaHtml;
+
+  var html = '';
+
+  // Actions bar (share + export)
+  var shareUrl = window.location.href;
+  html += '<div class="actions-bar">';
+  html += '<span class="actions-label"><i class="fas fa-share-nodes" style="color:var(--primary)"></i> Share these results</span>';
+  html += '<div class="share-row" style="flex:2;min-width:200px">';
+  html += '<input class="share-url" id="share-url-input" type="text" readonly value="' + esc(shareUrl) + '">';
+  html += '<button class="copy-btn" onclick="copyUrl()" title="Copy link"><i class="fas fa-copy"></i></button>';
+  html += '</div>';
+  html += '<button class="btn" onclick="exportCSV()"><i class="fas fa-file-csv"></i> CSV</button>';
+  html += '<button class="btn" onclick="exportPDF()"><i class="fas fa-file-pdf"></i> PDF</button>';
+  html += '</div>';
+
+  // Stats
+  html += '<div class="stats">';
+  html += '<div class="stat-card"><div class="stat-val">' + numFmt(total) + '</div><div class="stat-lbl">Total Votes</div></div>';
+  html += '<div class="stat-card"><div class="stat-val">' + (d.results||[]).length + '</div><div class="stat-lbl">Candidates</div></div>';
+  if (d.status === 'closed' && d.results && d.results[0] && d.results[0].voteCount > 0) {
+    html += '<div class="stat-card"><div class="stat-val" style="font-size:16px;padding-top:4px">' + esc(d.results[0].name) + '</div><div class="stat-lbl">Winner 🏆</div></div>';
+  }
+  html += '</div>';
+
+  // Turnout bar
+  if (d.turnoutTarget && d.turnoutTarget > 0) {
+    var tPct = Math.min(100, (d.totalVotes / d.turnoutTarget * 100));
+    var tColor = tPct >= 75 ? 'var(--success)' : tPct >= 40 ? 'var(--warning)' : 'var(--error)';
+    html += '<div class="card">';
+    html += '<div class="section-title"><i class="fas fa-users"></i>Voter Turnout</div>';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html += '<span style="font-size:13px;color:var(--text2)">' + numFmt(d.totalVotes) + ' of ' + numFmt(d.turnoutTarget) + ' eligible voters</span>';
+    html += '<span style="font-size:22px;font-weight:900;color:' + tColor + '">' + tPct.toFixed(1) + '%</span>';
+    html += '</div>';
+    html += '<div style="height:14px;background:var(--border);border-radius:7px;overflow:hidden;position:relative">';
+    html += '<div class="bar-fill" data-pct="' + tPct.toFixed(1) + '" style="width:0%;height:100%;background:' + tColor + ';border-radius:7px"></div>';
+    html += '<div style="position:absolute;top:0;bottom:0;left:60%;width:2px;background:rgba(255,255,255,.25)"></div>';
+    html += '</div>';
+    html += '<div style="font-size:11px;color:var(--text3);margin-top:4px;text-align:right">Quorum guide line at 60%</div>';
+    html += '</div>';
+  }
+
+  // Candidate bars
+  if (d.results && d.results.length) {
+    html += '<div class="card">';
+    html += '<div class="section-title"><i class="fas fa-chart-bar"></i>Vote Breakdown</div>';
+    d.results.forEach(function(r, i) {
+      var pct     = total > 0 ? (r.voteCount / total * 100).toFixed(1) : '0.0';
+      var color   = PALETTE[i % PALETTE.length];
+      var isFirst = i === 0 && r.voteCount > 0;
+      var rankBg  = isFirst ? 'rgba(255,215,0,.15)' : 'rgba(108,99,255,.1)';
+      var rankColor = isFirst ? '#b8860b' : color;
+
+      html += '<div class="candidate">';
+      html += '<div class="cand-header">';
+      html += '<div class="cand-left">';
+      html += '<div class="cand-rank" style="background:' + rankBg + ';color:' + rankColor + '">';
+      html += isFirst ? '<i class="fas fa-star" style="font-size:10px"></i>' : (i+1);
+      html += '</div>';
+      html += '<span class="cand-name">' + esc(r.name) + '</span>';
+      if (r.party) html += '<span class="cand-party">· ' + esc(r.party) + '</span>';
+      if (isFirst && d.status === 'closed') html += '<span class="winner-badge">WINNER</span>';
+      html += '</div>';
+      html += '<div>';
+      html += '<span class="cand-pct" style="color:' + color + '">' + pct + '%</span>';
+      html += '<span class="cand-votes">' + numFmt(r.voteCount) + ' votes</span>';
+      html += '</div>';
+      html += '</div>';
+      html += '<div class="bar-bg"><div class="bar-fill" style="width:0%;background:' + color + '" data-pct="' + pct + '"></div></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="card" style="text-align:center;padding:40px">';
+    html += '<i class="fas fa-hourglass-half" style="font-size:36px;color:var(--text3);margin-bottom:12px"></i>';
+    html += '<p style="color:var(--text2)">No votes have been cast yet.</p>';
+    html += '</div>';
+  }
+
+  // Blockchain note
+  html += '<div class="blockchain-note">';
+  html += '<i class="fas fa-link"></i>';
+  html += '<span>Every vote in this election is permanently recorded on the <strong>Solana blockchain</strong>. ';
+  html += 'Results are calculated directly from on-chain data and cannot be altered.</span>';
+  html += '</div>';
+
+  document.getElementById('content').innerHTML = html;
+
+  // Animate bars after paint
+  setTimeout(function() {
+    document.querySelectorAll('.bar-fill').forEach(function(el) {
+      el.style.width = el.dataset.pct + '%';
+    });
+  }, 100);
+}
+
+function showError(title, msg) {
+  document.getElementById('content').innerHTML =
+    '<div class="center-state">' +
+    '<i class="fas fa-circle-exclamation" style="color:var(--error)"></i>' +
+    '<h2>' + esc(title) + '</h2>' +
+    '<p>' + esc(msg) + '</p>' +
+    '<br><button class="btn btn-primary" onclick="loadResults()" style="margin:0 auto">' +
+    '<i class="fas fa-rotate-right"></i> Retry</button>' +
+    '</div>';
+}
+
+function copyUrl() {
+  var input = document.getElementById('share-url-input');
+  if (input) { input.select(); document.execCommand('copy'); }
+  // Brief visual feedback
+  var btn = document.querySelector('.copy-btn');
+  if (btn) {
+    btn.innerHTML = '<i class="fas fa-check" style="color:var(--success)"></i>';
+    setTimeout(function() { btn.innerHTML = '<i class="fas fa-copy"></i>'; }, 1500);
+  }
+}
+
+function exportCSV() {
+  if (!resultsData) return;
+  var d = resultsData;
+  var rows = [
+    ['Election', d.title || ''],
+    ['Status', d.status || ''],
+    ['Total Votes', d.totalVotes || 0],
+    [],
+    ['Rank', 'Candidate', 'Party', 'Votes', 'Percentage']
+  ];
+  (d.results || []).forEach(function(r, i) {
+    rows.push([i+1, r.name, r.party||'', r.voteCount, r.percentage+'%']);
+  });
+  var csv = rows.map(function(row) {
+    return row.map(function(c) {
+      var s = String(c == null ? '' : c).replace(/"/g, '""');
+      return /[,\n\r"]/.test(s) ? '"'+s+'"' : s;
+    }).join(',');
+  }).join('\r\n');
+  var blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'results_' + (d.title||'election').replace(/[^a-z0-9]/gi,'_').toLowerCase().substring(0,30) + '.csv';
+  a.click();
+}
+
+function exportPDF() {
+  window.print();
+}
+
+function numFmt(n) {
+  if (n == null) return '0';
+  n = Number(n);
+  if (n >= 1e6) return (n/1e6).toFixed(1)+'M';
+  if (n >= 1e3) return (n/1e3).toFixed(1)+'K';
+  return n.toLocaleString();
+}
+
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Boot
+loadResults();
+</script>
+</body>
+</html>
